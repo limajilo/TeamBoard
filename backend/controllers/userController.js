@@ -44,7 +44,10 @@ const registerUser = async (req, res) => {
 
 
 const listUser = async (req, res) => {
-  let users = await user.find()
+  let users = await user
+  .find({name: new RegExp(req.params["name"])})
+  .populate("role")
+  .exec();
   if(users.length ===0)
   return res.status(400).send({message: "No search results"});
 
