@@ -6,12 +6,9 @@ import moment from "moment";
 
 
 const registerUser = async (req, res) => {
-  if (!req.body.name || !req.body.email || !req.body.password)
+  if (!req.body.name || !req.body.password)
     return res.status(400).send({ message: "Incomplete data" });
-
-  const existingUser = await user.findOne({ email: req.body.email });
-  if (existingUser)
-    return res.status(400).send({ message: "The user is already registered" });
+    
     const passHash = await bcrypt.hash(req.body.password, 10);
 
     const roleId = await role.findOne({ name: "user" });
