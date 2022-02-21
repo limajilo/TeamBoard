@@ -82,4 +82,14 @@ const login = async(req, res) => {
 
 };
 
-export default { registerUser, listUser, login };
+const deleteUser = async(req, res) =>{
+  if(!req.params["_id"]._id) return res.status(400).send({message: "Incomplete data"});
+
+  const users= await user.findByIdAndDelete(req.params["_id"]);
+
+  return !users ?
+   res.status(400).send({message: "Error deleting user"})
+   : res.status(200).send({message: "User deleted"});
+};
+
+export default { registerUser, listUser, login, deleteUser };
