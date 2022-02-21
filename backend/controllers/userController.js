@@ -8,7 +8,6 @@ const registerUser = async (req, res) => {
   if (!req.body.name || !req.body.password)
     return res.status(400).send({ message: "Incomplete data" });
 
-
   const passHash = await bcrypt.hash(req.body.password, 10);
 
   const roleId = await role.findOne({ name: "user" });
@@ -42,27 +41,41 @@ const registerUser = async (req, res) => {
   }
 };
 
+const listUserAdmin = async (req, res) => {
+  let users = await user
+    .find({ name: new RegExp(req.params["name"]) })
+    .populate("role")
+    .exec();
+  if (users.length === 0)
+    return res.status(400).send({ message: "No search results" });
+
+  return res.status(200).send({ users });
+};
 
 const listUser = async (req, res) => {
   let users = await user
-  .find({name: new RegExp(req.params["name"])})
-  .populate("role")
-  .exec();
-  if(users.length ===0)
-  return res.status(400).send({message: "No search results"});
+    .find({
+      $and: [{ name: new RegExp(req.params["name"]) }, { dbStatus: "true" }],
+    })
+    .populate("role")
+    .exec();
+  if (users.length === 0)
+    return res.status(400).send({ message: "No search results" });
 
-  return res.status(200).send({users});
+  return res.status(200).send({ users });
 };
 
-const login = async(req, res) => {
+const login = async (req, res) => {
+  const userLogin = await user.findOne({ email: req.body.email });
+  if (!userLogin)
+    return res.status(400).send({ message: "Wrong email or password found" });
 
-  const userLogin = await user.findOne({email: req.body.email});
-  if(!userLogin) return res.status(400).send({message: "Wrong email or password found"});
-
-  if(!userLogin.dbStatus) return res.status(400).send({message: "User not found"});
+  if (!userLogin.dbStatus)
+    return res.status(400).send({ message: "Wrong email or password found" });
 
   const passHash = await bcrypt.compare(req.body.password, userLogin.password);
-  if(!passHash) return res.status(400).send({message: "Wrong email or password found"});
+  if (!passHash)
+    return res.status(400).send({ message: "Wrong email or password found" });
 
   try {
     return res.status(200).json({
@@ -79,19 +92,49 @@ const login = async(req, res) => {
   } catch (e) {
     return res.status(500).send({ message: "Loging error" });
   }
-
 };
 
-const deleteUser = async(req, res) =>{
-  if(!req.params["_id"]) return res.status(400).send({message: "Incomplete data"});
+const deleteUser = async (req, res) => {
+  if (!req.params["_id"])
+    return res.status(400).send({ message: "Incomplete data" });
 
-  const users= await user.findByIdAndUpdate(req.params["_id"],{
+  const users = await user.findByIdAndUpdate(req.params["_id"], {
     dbStatus: false,
   });
 
-  return !users ?
-   res.status(400).send({message: "Error deleting user"})
-   : res.status(200).send({message: "User deleted"});
+  return !users
+    ? res.status(400).send({ message: "Error deleting user" })
+    : res.status(200).send({ message: "User deleted" });
 };
 
-export default { registerUser, listUser, login, deleteUser };
+const updateUserAdmin = async (req, res) => {
+  if (!req.body._id || !req.body.name || !req.body.role)
+    return res.status(400).send({ message: "Incomplete data" });
+
+  let pass = "";
+
+  if (!req.body.password) {
+    const findUser = await user.findOne({ email: req.body.email });
+    pass = findUser.password;
+  } else {
+    pass = await bcrypt.hash(req.body.password, 10);
+  }
+
+  const editUser = await user.findByIdAndUpdate(req.body._id, {
+    name: req.body.name,
+    password: pass,
+    role: req.body.role,
+  });
+
+  if (!editUser) return res.status(500).send({ message: "Error editing user" });
+  return res.status(200).send({ message: "User updated" });
+};
+
+export default {
+  registerUser,
+  listUser,
+  login,
+  deleteUser,
+  listUserAdmin,
+  updateUserAdmin,
+};
