@@ -15,5 +15,6 @@ router.post(
 
 router.get("/listUser/:name?", userController.listUser);
 router.post("/login",userController.login);
+router.put("/delete/:_id",userController.deleteUser);
 
 export default router;

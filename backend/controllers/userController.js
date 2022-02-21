@@ -83,9 +83,11 @@ const login = async(req, res) => {
 };
 
 const deleteUser = async(req, res) =>{
-  if(!req.params["_id"]._id) return res.status(400).send({message: "Incomplete data"});
+  if(!req.params["_id"]) return res.status(400).send({message: "Incomplete data"});
 
-  const users= await user.findByIdAndDelete(req.params["_id"]);
+  const users= await user.findByIdAndUpdate(req.params["_id"],{
+    dbStatus: false,
+  });
 
   return !users ?
    res.status(400).send({message: "Error deleting user"})
