@@ -2,12 +2,16 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
 // Relacion con usuario
-    user: {type: mongoose.Schema.Object, ref: "users"},
+    user: {type: mongoose.Schema.ObjectId, ref: "users"},
     name: String,
     description: String,
-    taskStatus: "to-do",
+    taskStatus: {
+        type: String,
+        enum: ['to-do', 'in-progress', 'finished'],
+        default: 'to-do',
+    },
     imageUrl: String,
-    registerDate: {type:Date, default: Date.now}
+    registerDate: { type: Date, default: Date.now },
 });
 
 const task = mongoose.model("tasks", taskSchema);
